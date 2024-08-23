@@ -1,0 +1,21 @@
+---
+- command: dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm -y
+
+- ansible.builtin.package: 
+    name: 
+      - epel-release
+      - s3fs-fuse
+    state: present
+
+- lineinfile:
+    path: /etc/passwd-s3fs
+    line: "{{access_keys_id}}:{{secret_access_key}}"
+    create: True
+    mode: 0640
+
+- name: Process s3fs mounts
+  include_tasks: mount.yml
+  loop: "{{s3fs_mounts | dict2items}}"
+  loop_control:
+    label: "{{ item.value.bucket }} -> {{ item.key }}"
+
