@@ -1,0 +1,6 @@
+# main.yml
+
+- include_tasks: users.yml
+  with_dict: "{{ user_data }}"
+  vars:
+    user_name: "{{ item.value.name | default(item.key) }}"

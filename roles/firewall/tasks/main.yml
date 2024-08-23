@@ -1,0 +1,38 @@
+# roles/os-firewall/tasks/main.yml
+---
+- name: Manage the firewall ports for summary
+  block:
+    - name: Query the status of port  in the firewalld
+      command: "firewall-cmd --query-port={{ item.value.port }}"
+      ignore_errors: yes
+      check_mode: no
+      register: port_query
+      with_dict: "{{ firewall_data }}"
+    - set_fact:
+        custom_change_summary: "{{ custom_change_summary | default([]) + [ message ] }}"
+      vars:
+        message: "{{ (result.rc == 0 and result.item.value.state | default('enabled') == 'disabled') | ternary(result.item.value.port ~ ' will be removed', (result.rc != 0 and (result.item.value.state | default('enabled')) == 'enabled') | ternary(result.item.value.port ~ ' will be added', 'no action')) }}"
+      loop: "{{ port_query.results }}"
+      loop_control:
+        loop_var: result
+      when: "'no action' not in message"
+  when: 
+    - ansible_check_mode
+
+- name: Manage the firewall ports
+  block:
+    - name: Start and enable firewalld.
+      service:
+        name: firewalld
+        state: started
+        enabled: yes
+    - name: Create or update firewall rules
+      ansible.posix.firewalld:
+        port: "{{ item.value.port }}"
+        permanent: true
+        state: "{{ fw_state }}"
+        immediate: true
+      vars: 
+        fw_state: "{{ item.value.state | default('enabled') }}"
+      with_dict: "{{ firewall_data }}"
+  when: not ansible_check_mode

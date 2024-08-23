@@ -1,0 +1,9 @@
+# roles/os-groups/tasks/main.yml
+---
+ 
+- name: Create or update groups
+  ansible.builtin.group:
+    name: "{{ item.value.name | default(item.key) }}"
+    gid: "{{ item.value.id }}"
+    state: present
+  with_dict: "{{ group_data }}"
