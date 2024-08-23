@@ -5,10 +5,10 @@
 namespace: runsap
 
 # The name of the collection. Has the same character restrictions as 'namespace'
-name: os
+name: linux
 
 # The version of the collection. Must be compatible with semantic versioning
-version: 0.1.0
+version: 0.2.0
 
 # The path to the Markdown (.md) readme file. This path is relative to the root of the collection
 readme: README.md
