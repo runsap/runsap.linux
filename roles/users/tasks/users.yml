@@ -1,0 +1,42 @@
+- name: Check if user exists
+  command: getent passwd "{{ user_name }}"
+  register: user_exists
+  ignore_errors: true
+  changed_when: false
+  check_mode: false
+
+- name: Create or update os users
+  ansible.builtin.user:
+    name: "{{ user_name }}"
+    uid: "{{ item.value.id | default(omit) }}"
+    comment: "{{ item.value.description | default(omit) }}"
+    shell: "{{ item.value.shell  | default('/bin/bash') }}"
+    group: "{{ item.value.groups[0] | default(omit) }}"
+    groups: "{{ item.value.groups | default([]) | join(',') | default(omit) }}"
+    state: "{{ item.value.state | default('present') }}"
+  register: user_reg
+
+- name: Set authorized key
+  ansible.posix.authorized_key:
+    user: "{{ user_name }}"
+    state: "{{ item.value.state | default('present') }}"
+    key: "{{ item.value.authorized_key }}"
+  register: user_key
+  when: 
+    - user_exists.rc == 0
+    - item.value.authorized_key is defined
+
+- set_fact:
+    custom_change_summary: "{{ custom_change_summary | default([]) + [ _message | trim ] }}"
+  vars:
+    _message: >
+      {% if user_exists.rc == 0 and user_key.changed %}
+        user {{ user_name }} bestaat en de key wordt gewijzigd of aangemaakt.
+      {% elif user_exists.rc == 2 and item.value.authorized_key is defined %}
+        user {{ user_name }} wordt aangemaakt met een ssh key.
+      {% elif user_exists.rc == 2 %}
+        user {{ user_name }} wordt aangemaakt.
+      {% endif %}
+  when: 
+    - ansible_check_mode
+    - (user_exists.rc == 0 and user_key.changed) or user_exists.rc == 2
