@@ -1,0 +1,20 @@
+
+---
+- name: Check if PV exists
+  command: pvdisplay {{ item.os_device_name }}
+  register: pv_check
+  ignore_errors: yes
+  loop: "{{ vg.value }}"
+
+- debug: var=pv_check
+
+- name: Create PV if not exists
+  command: pvcreate {{ item.item.os_device_name }}
+  when: item.rc != 0
+  loop: "{{ pv_check.results }}"
+
+- name: Resize pv in case it is enlarged
+  command: pvresize {{ item.device_name }}
+  register: pv_check
+  ignore_errors: yes
+  loop: "{{ vg.value }}"
