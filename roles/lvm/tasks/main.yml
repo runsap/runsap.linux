@@ -1,0 +1,29 @@
+# lvm_setup/tasks/main.yml
+---
+- name: Install LVM2
+  package:
+    name: lvm2
+    state: present
+
+- include_tasks: create_pv.yml
+  loop: "{{ vgs | dict2items }}"
+  loop_control:
+    loop_var: vg
+  when: vg.value is not none 
+
+- name: Create Volume Group if not exists
+  community.general.lvg:
+    vg: "{{ vg.key }}"
+    pvs: "{{ vg.value | map(attribute='os_device_name') | list }}"
+#    pvs: "{{ vg.value | map(attribute='nvm_device_name', default='device_name') | list }}"
+  loop: "{{ vgs | dict2items }}"
+  loop_control:
+    loop_var: vg
+  when: vg.value is not none 
+  
+- include_tasks: create_lv_and_mount.yml
+  loop: "{{ mounts | dict2items }}"
+  loop_control:
+    loop_var: mount
+  vars: 
+    fstype: "{{ mount.value.fstype | default('ext4') }}"

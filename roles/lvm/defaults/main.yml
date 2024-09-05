@@ -1,0 +1,5 @@
+# lvm_setup/defaults/main.yml
+---
+size_postfix: G
+swap_convert_size:
+ G: 1024
