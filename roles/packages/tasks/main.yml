@@ -1,0 +1,22 @@
+# main.yml
+---
+
+- name: Manage packages on all hosts
+  ansible.builtin.dnf:
+    name: "{{ item.key }}" 
+    state: "{{ item.value.state | default('present') }}"
+    disable_gpg_check: "{{ item.value.disable_gpg_check | default('false') }}"
+  register: out
+  loop: "{{ packages | dict2items }}"
+  loop_control:
+    label: "Managing package {{ item.key }} to be {{ item.value.state | default('present') }}"
+
+- name: Provide information for summary
+  set_fact:
+    custom_change_summary: "{{ custom_change_summary | default([]) + [ message ] }}"
+  vars:
+    message: "{{ item.item.key }} {{ 'will be removed' if item.item.value.state | default('present') == 'absent' else 'will be installed' }}"
+  loop: "{{ out.results }}"
+  when: 
+    - ansible_check_mode
+    - item.changed
