@@ -1,0 +1,17 @@
+
+- name: Remove cron job from host data
+  ansible.builtin.cron:
+    name: "{{ cron_name }}"
+    user: "{{ cron_user }}"
+    minute: "{{ cron_minute }}"
+    hour: "{{ cron_hour }}"
+    job: "{{ cron_job }}"
+    state: absent
+  become: true
+  become_user: "{{ cron_user }}"
+  
+- name: Create and adding to '{{ crontab_state_file }}'
+  lineinfile:
+    path: "{{ crontab_state_file }}"
+    regexp: '^{{cron_user}}:{{ cron_key }}:'
+    state: absent

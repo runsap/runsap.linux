@@ -1,0 +1,37 @@
+- debug: var=crontabs_in_state_file
+
+- set_fact:
+    crontabs_from_variable_with_user: []
+    
+- block:
+    - name: Set crontabs fact to include user
+      set_fact:
+        crontabs_from_variable_with_user: "{{ crontabs_from_variable_with_user + [ user ~ ':' ~item.key ~':' ~ item.value.name ~':' ~ item.value.hour ~':' ~ item.value.minute ~':' ~ item.value.job ] }}"
+      loop: "{{ crontabs }}"
+  vars: 
+    user: >-
+      {{
+      item.value.user if item.value.user is defined else (
+        ansible_user if item.value.sap_type is not defined else
+        host_data[cloud].tags['Sap_' + item.value.sap_type + '_sid'] ~ 'adm'
+      )
+      }}
+
+- set_fact:
+    remove_crontabs: "{{ crontabs_in_state_file | difference(crontabs_from_variable_with_user) }}"
+    create_crontabs: "{{ crontabs_from_variable_with_user | difference(crontabs_in_state_file) }}"
+
+- block:
+    - name: Remove crontabs from statefile - not in variable
+      include_tasks: remove-crontab.yml
+      loop: "{{ remove_crontabs }}"
+    - name: Add crontab
+      include_tasks: create-crontab.yml
+      loop: "{{ create_crontabs }}"
+  vars:
+    cron_user: "{{ item.split(':')[0] }}"
+    cron_key: "{{ item.split(':')[1] }}"
+    cron_name: "{{ item.split(':')[2] }}"
+    cron_hour: "{{ item.split(':')[3] }}"
+    cron_minute: "{{ item.split(':')[4] }}"
+    cron_job: "{{ item.split(':')[5] }}"

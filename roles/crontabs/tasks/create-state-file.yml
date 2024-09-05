@@ -1,0 +1,17 @@
+- name: Create the directory
+  file:
+    path: "{{ state_file_directory }}"
+    recurse: true
+    state: directory
+    #group: "{{ crontab_state_file_group }}"
+    #mode: '0774'
+  vars:
+    state_file_directory: "{{ crontab_state_file | dirname }}"
+  check_mode: false # runs task in check mode
+- name: Touch the file
+  file:
+    path: "{{ crontab_state_file }}"
+    state: touch
+    #group: "{{ crontab_state_file_group }}"
+    mode: '0774'
+  check_mode: false # runs task in check mode
