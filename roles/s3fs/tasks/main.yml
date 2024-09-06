@@ -1,5 +1,10 @@
 ---
 - command: dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm -y
+- command: dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm -y
+
+- command: df -h
+  register: dfminh
+- debug: var=dfminh.stdout
 
 - ansible.builtin.package: 
     name: 
@@ -19,3 +24,6 @@
   loop_control:
     label: "{{ item.value.bucket }} -> {{ item.key }}"
 
+- command: df -h
+  register: dfminh
+- debug: var=dfminh.stdout
