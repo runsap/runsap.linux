@@ -1,7 +1,9 @@
 # roles/os-firewall/tasks/main.yml
 ---
-- package: firewalld
-  state: present
+- name: Install firewalld
+  package:
+    name: firewalld
+    state: present
 
 - name: Manage the firewall ports for summary
   block:
