@@ -1,5 +1,8 @@
 # roles/os-firewall/tasks/main.yml
 ---
+- package: firewalld
+  state: present
+
 - name: Manage the firewall ports for summary
   block:
     - name: Query the status of port  in the firewalld
