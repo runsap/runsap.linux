@@ -1,0 +1,8 @@
+---
+- name: Create udev rule for naming first disk as xvdf
+  blockinfile:
+    path: /etc/udev/rules.d/10-custom-disk.rules
+    block: |
+      SUBSYSTEM=="block", KERNELS=="[a-z]*", KERNEL=="sd[a-z]*", ACTION=="add", ENV{DEVTYPE}=="disk", PROGRAM="/bin/bash -c 'echo $tempnode'", SYMLINK+="xvdf"
+  notify: Reload udev rules
+

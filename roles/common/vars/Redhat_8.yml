@@ -1,0 +1,4 @@
+sap_common_packages:
+  - nfs-utils
+  - telnet
+  - awscli

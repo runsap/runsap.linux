@@ -1,0 +1,44 @@
+# - name: Remove earlier registrations if available
+#   sudo /sbin/subscription-manager remove --all
+  
+- name: Register and auto-subscribe to available content.
+  community.general.redhat_subscription:
+    state: present
+    username: "{{redhat_subscription_username}}"
+    password: "{{redhat_subscription_password}}"
+    auto_attach: true
+    force_register: true
+  when: ansible_distribution == "RedHat"
+  ignore_errors: true
+
+# https://access.redhat.com/solutions/5225231
+- name: Set rhsm.manage_repos configuration parameter 
+  lineinfile:
+    path: /etc/rhsm/rhsm.conf
+    regexp: '^manage_repos\s*='
+    line: 'manage_repos = 1'
+  notify: Restart rhsmcertd service
+
+- name: Ensure rhsmcertd service is running
+  service:
+    name: rhsmcertd
+    state: started
+    enabled: true
+
+- name: Os specifics
+  block:
+    - name: Set RHSM release version
+      community.general.rhsm_release:
+        release: "8.6"
+    - name: Enable a RHSM repository
+      community.general.rhsm_repository:
+        name: "{{repo}}"
+      loop_control:
+        loop_var: repo
+      loop: 
+        - rhel-8-for-x86_64-sap-netweaver-rpms
+        - rhel-8-for-x86_64-sap-solutions-rpms
+        - rhel-8-for-x86_64-appstream-rpms # hana / swpm
+  when: 
+    - ansible_distribution == 'RedHat'
+    - ansible_distribution_major_version == '8'
