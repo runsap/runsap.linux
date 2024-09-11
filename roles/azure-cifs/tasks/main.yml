@@ -1,0 +1,37 @@
+- name: Install CIFS utilities
+  package:
+    name: cifs-utils
+    state: present
+
+- name: Ensure mount directories exist
+  file:
+    path: "{{ item.value.path | default(item.key) }}"
+    state: directory
+    mode: "{{ item.value.mode }}"
+  loop: "{{ cifs | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  when: cifs is defined
+
+- name: Create SMB credentials files
+  template:
+    src: smb_credentials.j2
+    dest: "/etc/.smb-{{ item.value.file_share_name }}"
+    mode: '0600'
+  no_log: true
+  loop: "{{ cifs | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  when: cifs is defined
+
+- name: Mount CIFS shares
+  mount:
+    path: "{{ item.value.path | default(item.key) }}"
+    src: "//{{ item.value.storage_account_name }}.file.core.windows.net/{{ item.value.file_share_name }}"
+    fstype: cifs
+    opts: "nofail,vers=3.0,credentials=/etc/.smb-{{ item.value.file_share_name }},serverino,dir_mode=0755,file_mode=0755"
+    state: mounted
+  loop: "{{ cifs | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  when: cifs is defined
