@@ -1,9 +1,0 @@
-- name: Voeg Microsoft repository toe
-  yum:
-    name: "https://packages.microsoft.com/config/rhel/{{ ansible_distribution_major_version }}/packages-microsoft-prod.rpm"
-    state: present
-
-- name: Installeer Azure Blobfuse
-  yum:
-    name: blobfuse
-    state: present
