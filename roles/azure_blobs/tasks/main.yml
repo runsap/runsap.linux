@@ -8,5 +8,7 @@
   ansible.builtin.include_tasks: do_mount.yml
   loop: "{{ blobs | dict2items }}"
   vars:
-    container_name: item.value.container_name
+    container_name: "{{ item.value.container_name }}"
     path: "{{ item.value.path | default(item.key) }}"
+    storage_account_name: "{{ item.value.container_name }}"
+    storage_account_key: "{{ item.value.container_name }}"

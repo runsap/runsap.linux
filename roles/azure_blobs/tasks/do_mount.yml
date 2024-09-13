@@ -23,6 +23,6 @@
     path: "{{ path }}"
     src: blobfuse
     fstype: fuse
-    opts: "defaults,_netdev,--tmp-path=/mnt/resource/blobfusetmp-{{ item.container_name }},--config-file=/etc/fuse_connection-{{ container_name }}.cfg,--log-level=LOG_DEBUG,allow_other"
+    opts: "defaults,_netdev,--tmp-path=/mnt/resource/blobfusetmp-{{ container_name }},--config-file=/etc/fuse_connection-{{ container_name }}.cfg,--log-level=LOG_DEBUG,allow_other"
     state: mounted
   
