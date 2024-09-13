@@ -10,5 +10,5 @@
   vars:
     container_name: "{{ item.value.container_name }}"
     path: "{{ item.value.path | default(item.key) }}"
-    storage_account_name: "{{ item.value.container_name }}"
-    storage_account_key: "{{ item.value.container_name }}"
+    storage_account_name: "{{ item.value.storage_account_name }}"
+    storage_account_key: "{{ item.value.storage_account_key }}"
