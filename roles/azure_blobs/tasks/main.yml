@@ -1,0 +1,14 @@
+- name: Verzamel facts over het systeem
+  ansible.builtin.setup:
+
+- name: Include os specific task
+  include_tasks: "{{ ansible_distribution }}.yml"
+
+- name: Maak blobfuse mount aan
+  ansible.builtin.include_tasks: do_mount.yml
+  loop: "{{ blobs | dict2items }}"
+  vars:
+    container_name: "{{ item.value.container_name }}"
+    path: "{{ item.value.path | default(item.key) }}"
+    storage_account_name: "{{ item.value.storage_account_name }}"
+    storage_account_key: "{{ item.value.storage_account_key }}"

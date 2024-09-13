@@ -1,0 +1,28 @@
+- name: Maak directory voor blobfuse aan
+  ansible.builtin.file:
+    path: /mnt/resource/blobfusetmp-{{ container_name }}
+    state: directory
+    # owner: "{{ youruser }}"
+    # group: "{{ youruser }}"
+    mode: '0755'  # Pas de rechten aan indien nodig
+
+- name: Create Blobfuse credentials files
+  template:
+    src: fuse_connection.cfg.j2
+    dest: "/etc/fuse_connection-{{ container_name }}.cfg"
+    mode: '0600'
+
+- name: Maak de mountpoint directory aan
+  ansible.builtin.file:
+    path: "{{ path }}"
+    state: directory
+    mode: '0755'  # Pas de rechten aan indien nodig
+
+- name: Monteer blobfuse bestandssysteem
+  ansible.builtin.mount:
+    path: "{{ path }}"
+    src: blobfuse
+    fstype: fuse
+    opts: "defaults,_netdev,--tmp-path=/mnt/resource/blobfusetmp-{{ container_name }},--config-file=/etc/fuse_connection-{{ container_name }}.cfg,--log-level=LOG_DEBUG,allow_other"
+    state: mounted
+  
