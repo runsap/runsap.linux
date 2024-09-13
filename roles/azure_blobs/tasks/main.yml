@@ -4,34 +4,9 @@
 - name: Include os specific task
   include_tasks: "{{ ansible_distribution }}.yml"
 
-- name: Maak directory voor blobfuse aan
-  ansible.builtin.file:
-    path: /mnt/resource/blobfusetmp-{{ item.container_name }}
-    state: directory
-    # owner: "{{ youruser }}"
-    # group: "{{ youruser }}"
-    mode: '0755'  # Pas de rechten aan indien nodig
-  loop: "{{ blobs }}"
-
-- name: Create Blobfuse credentials files
-  template:
-    src: fuse_connection.cfg.j2
-    dest: "/etc/fuse_connection-{{ item.container_name }}.cfg"
-    mode: '0600'
-  loop: "{{ blobs }}"
-
-- name: Maak de mountpoint directory aan
-  ansible.builtin.file:
+- name: Maak blobfuse mount aan
+  ansible.builtin.include_tasks: do_mount.yml
+  loop: "{{ blobs | dict2items }}"
+  vars:
+    container_name: item.value.container_name
     path: "{{ item.value.path | default(item.key) }}"
-    state: directory
-    mode: '0755'  # Pas de rechten aan indien nodig
-  loop: "{{ blobs }}"
-
-- name: Monteer blobfuse bestandssysteem
-  ansible.builtin.mount:
-    path: "{{ item.value.path | default(item.key) }}"
-    src: blobfuse
-    fstype: fuse
-    opts: "defaults,_netdev,--tmp-path=/mnt/resource/blobfusetmp-{{ item.container_name }},--config-file=/etc/fuse_connection-{{ item.container_name }}.cfg,--log-level=LOG_DEBUG,allow_other"
-    state: mounted
-  loop: "{{ blobs }}"

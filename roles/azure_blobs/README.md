@@ -17,10 +17,10 @@ Example
     name: runsap.linux.azure_cifs
   vars:
     blobs: 
-        /mnt/blob_share:
-            container_name: share
-            storage_account_name: runsapshared
-            storage_account_key: secretkey
+      /mnt/blob_share:
+        container_name: share
+        storage_account_name: runsapshared
+        storage_account_key: secretkey
 ```            
 
 Optionally you can add path to mount the container on a different location.
