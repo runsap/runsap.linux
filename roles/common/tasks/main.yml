@@ -6,8 +6,8 @@
 # - name: Set disknames
 #   ansible.builtin.include_tasks: os-set-disknames.yml
 
-# - name: Set hostname
-#   ansible.builtin.include_tasks: os-set-hostname.yml
+- name: Set hostname
+  ansible.builtin.include_tasks: os-set-hostname.yml
 
 - ansible.builtin.include_tasks: rhel-subscriptions.yml
   when: os_license == 'byol'
