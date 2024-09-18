@@ -1,0 +1,9 @@
+    - name: Ensure /etc/resolv.conf contains the correct search and nameserver values
+      lineinfile:
+        path: /etc/resolv.conf
+        line: "{{ item }}"
+        state: present
+      loop:
+        - "search {{ resolve_search }}"  # Pas aan naar de gewenste search waarde
+        - "nameserver {{ resolve_nameserver }}"  # Pas aan naar de gewenste nameserver waarde
+      notify: Restart network service
