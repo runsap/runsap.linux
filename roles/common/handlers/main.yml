@@ -7,3 +7,8 @@
   systemd:
     name: systemd-udevd
     state: restarted
+
+- name: Restart network service
+  service:
+    name: network
+    state: restarted
