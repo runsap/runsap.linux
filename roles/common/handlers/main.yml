@@ -9,6 +9,4 @@
     state: restarted
 
 - name: Restart network service
-  service:
-    name: network
-    state: restarted
+  command: systemctl restart network || systemctl restart NetworkManager || systemctl restart systemd-resolved
