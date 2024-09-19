@@ -14,6 +14,7 @@
     group: "{{ item.value.groups[0] | default(omit) }}"
     groups: "{{ item.value.groups | default([]) | join(',') | default(omit) }}"
     state: "{{ item.value.state | default('present') }}"
+    password: "{{ item.value.password | password_hash('sha512') if item.value.password else omit }}"
   register: user_reg
 
 - name: Set authorized key
