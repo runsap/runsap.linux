@@ -7,6 +7,6 @@
   ansible.builtin.lineinfile:
     path: /etc/hosts
     regexp: '^{{ ansible_default_ipv4.address }}\s'
-    line: "{{ ansible_default_ipv4.address }} {{ host_name }}.{{ sap_domain }} {{ host_name }} "
+    line: "{{ ansible_default_ipv4.address }} {{ host_name}}.{{ host_domain }} {{ host_name}}"
     create: yes
   

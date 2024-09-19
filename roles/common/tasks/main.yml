@@ -3,12 +3,15 @@
     name: "{{ timezone | default('UTC') }}"
   tags: timezone
 
-# - name: Set disknames
-#   ansible.builtin.include_tasks: os-set-disknames.yml
+- name: Set hostname
+  ansible.builtin.include_tasks: os-set-hostname.yml
 
-# - name: Set hostname
-#   ansible.builtin.include_tasks: os-set-hostname.yml
-
+- name: Set /etc/resolve.conf
+  ansible.builtin.include_tasks: os-resolve-conf.yml
+  when: 
+    - resolve_nameserver is defined
+    - resolve_search is defined
+    
 - ansible.builtin.include_tasks: rhel-subscriptions.yml
   when: os_license == 'byol'
 
