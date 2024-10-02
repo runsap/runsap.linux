@@ -1,0 +1,28 @@
+- include_tasks: create-state-file.yml
+
+- name: Read crontabs from '{{ crontab_state_file }}'
+  ansible.builtin.shell: "cat {{ crontab_state_file }}"
+  register: crontab_state_file_output
+  check_mode: false # runs task in check mode
+
+- include_tasks: manage-crontabs.yml
+  vars:
+    crontabs: "{{ manage_crontabs | default({}) | dict2items }}"
+    crontabs_in_state_file: "{{ crontab_state_file_output.stdout_lines }}"
+
+#
+# Report variables for custom reporting
+#
+- set_fact:
+    remove_crontabs_checks: "{{remove_crontabs_checks | default({}) | combine({inventory_hostname: remove_crontabs}) }} "
+  when: remove_crontabs | length > 0
+- set_fact:
+    create_crontabs_checks: "{{create_crontabs_checks | default({}) | combine({inventory_hostname: create_crontabs}) }} "
+  when: create_crontabs | length > 0
+
+- name: Report - Store user and group changes
+  ansible.builtin.set_fact:
+    custom_summary:
+      remove_crontabs: "{{ remove_crontabs_checks | default(omit) }}"
+      create_crontabs: "{{ create_crontabs_checks | default(omit) }}"
+  

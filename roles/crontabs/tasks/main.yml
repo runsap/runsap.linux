@@ -1,28 +1,45 @@
-- include_tasks: create-state-file.yml
+- name: Converteer crontabs dict naar lijst
+  set_fact:
+    crontabs_list: "{{ crontabs | dict2items }}"
 
-- name: Read crontabs from '{{ crontab_state_file }}'
-  ansible.builtin.shell: "cat {{ crontab_state_file }}"
-  register: crontab_state_file_output
-  check_mode: false # runs task in check mode
+- name: Voeg gebruikers toe aan cron.allow in check mode
+  lineinfile:
+    path: /etc/cron.allow
+    line: "{{ item }}"
+    create: yes
+    state: present
+  register: cron_allow_check
+  loop: "{{ crontabs_list | map(attribute='value.user') | unique | list }}"
+  become: yes
+  when: crontabs_list is defined and crontabs_list | length > 0
 
-- include_tasks: manage-crontabs.yml
+- name: Update custom_change_summary met wijzigingen aan cron.allow
+  set_fact:
+    custom_change_summary: "{{ custom_change_summary | default([]) + ['Adding user ' + item.item + ' to cron.allow'] }}"
+  loop: "{{ cron_allow_check.results }}"
+  when: 
+    - ansible_check_mode
+    - item.changed
+
+- name: Beheer crontabs (check en execute mode)
+  cron:
+    name: "{{ item.value.name }}"
+    user: "{{ item.value.user | default(omit) }}"
+    minute: "{{ item.value.minute | default(omit) }}"
+    hour: "{{ item.value.hour | default(omit) }}"
+    job: "{{ item.value.job | default(omit) }}"
+    state: "{{ item.value.state | default('present') }}"
+  register: crontab_changes
+  loop: "{{ crontabs_list }}"
+  when: item.value.name is defined
+
+- set_fact:
+    custom_change_summary: "{{ custom_change_summary | default([]) + [message] }}"
+  loop: "{{ crontab_changes.results }}"
+  loop_control:
+    loop_var: crontab_change
   vars:
-    crontabs: "{{ manage_crontabs | default({}) | dict2items }}"
-    crontabs_in_state_file: "{{ crontab_state_file_output.stdout_lines }}"
-
-#
-# Report variables for custom reporting
-#
-- set_fact:
-    remove_crontabs_checks: "{{remove_crontabs_checks | default({}) | combine({inventory_hostname: remove_crontabs}) }} "
-  when: remove_crontabs | length > 0
-- set_fact:
-    create_crontabs_checks: "{{create_crontabs_checks | default({}) | combine({inventory_hostname: create_crontabs}) }} "
-  when: create_crontabs | length > 0
-
-- name: Report - Store user and group changes
-  ansible.builtin.set_fact:
-    custom_summary:
-      remove_crontabs: "{{ remove_crontabs_checks | default(omit) }}"
-      create_crontabs: "{{ create_crontabs_checks | default(omit) }}"
-  
+    message: "{% if crontab_change.item.value.state | default('present') == 'absent' %}Removing{% else %}Adding or changing{% endif %} crontab for '{{ crontab_change.item.value.name }}'"
+  when: 
+    - ansible_check_mode
+    - crontab_change.changed
