@@ -1,0 +1,7 @@
+# main.yml
+---
+- name: Include file for each sudo group
+  include_tasks: sudo-group.yml
+  loop: "{{ sudo_data | dict2items }}"
+  loop_control:
+    loop_var: sudo_group
