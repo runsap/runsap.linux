@@ -1,0 +1,35 @@
+# sudo-group.yml
+---
+- name: Add custom sudo rules to '{{ sudo_file }}'
+  ansible.builtin.lineinfile:
+    dest: "/etc/sudoers.d/{{ sudo_file }}"
+    line: "%{{ user_group }} ALL=({{ sudo_user }}) NOPASSWD: {{ commands }} # {{ comment }}"
+    state: "{{ desired_state }}"
+    create: yes
+    validate: /usr/sbin/visudo -cf %s
+  loop: "{{ sudo_group.value.rules | dict2items }}"
+  loop_control:
+    loop_var: rule
+  register: sudoout
+  vars:
+    sudo_file: "{{ sudo_group.value.file }}"
+    # sudo specifics
+    desired_state: "{{ rule.value.state | default('present') }}"
+    comment: "{{ rule.key | default('# no comments') }}"
+    user_group: "{{ sudo_group.key | default('unknown') }}"
+    sudo_user: "{{ rule.value.sudo_user | default('ALL') }}"
+    commands: "{{ rule.value.commands | default('ALL') }}"
+
+- name: Setting summary for sudo
+  set_fact:
+    custom_change_summary: "{{ custom_change_summary | default([]) + [ message ] }}"
+  loop: "{{ sudoout.results }}"
+  loop_control:
+    loop_var: rule
+  vars:
+    message: "{% if state == 'absent' %}Removing{% else %}Adding or changing{% endif %} sudo command for '{{ rule.rule.key }}'"
+    state: "{{ rule.rule.value.state | default('present') }}"
+  no_log: true
+  when: 
+    - ansible_check_mode
+    - rule.changed
