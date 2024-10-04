@@ -2,7 +2,7 @@
   service:
     name: rhsmcertd
     state: restarted
-    
+
 - name: Reload udev rules
   systemd:
     name: systemd-udevd
