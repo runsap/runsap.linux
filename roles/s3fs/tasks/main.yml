@@ -1,21 +1,17 @@
 ---
-- command: dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm -y
-  when: ansible_distribution_major_version == 8
-- command: dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm -y
-  when: ansible_distribution_major_version == 9
+- name: Install epel release for version '{{ ansible_distribution_major_version }}'
+  command: dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-{{ ansible_distribution_major_version }}.noarch.rpm -y
 
-# - command: df -h
-#   register: dfminh
-# - debug: var=dfminh.stdout
-
-- ansible.builtin.package:
+- name: Install additional packages
+  ansible.builtin.package:
     name:
       - epel-release
       - s3fs-fuse
     state: present
     disable_gpg_check: yes
 
-- lineinfile:
+- name: Add s3fs credentials
+  lineinfile:
     path: /etc/passwd-s3fs
     line: "{{access_keys_id}}:{{secret_access_key}}"
     create: True
@@ -27,6 +23,9 @@
   loop_control:
     label: "{{ item.value.bucket }} -> {{ item.key }}"
 
-- command: df -h
+- name: Command to show filesystems
+  command: df -h
   register: dfminh
-- debug: var=dfminh.stdout
+- name: Diplay debug message with filesystems
+  debug:
+    var: dfminh.stdout
